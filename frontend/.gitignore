@@ -1,0 +1,6 @@
+.quasar
+node_modules/
+dist/
+.DS_Store
+.thumbs.db
+.env.local

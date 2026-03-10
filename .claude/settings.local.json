@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm install:*)",
+      "Bash(npm install:*)",
+      "Bash(pnpm approve-builds:*)",
+      "Bash(pkill -f approve-builds 2>/dev/null; echo \"done\")",
+      "Bash(git rm:*)"
+    ]
+  }
+}

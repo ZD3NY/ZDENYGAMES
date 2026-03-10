@@ -7,6 +7,6 @@
     "build": "pnpm --filter ./backend build && pnpm --filter ./frontend build"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["@prisma/client", "@prisma/engines", "esbuild", "prisma", "vue-demi"]
+    "onlyBuiltDependencies": ["@prisma/client", "@prisma/engines", "bcrypt", "esbuild", "prisma", "vue-demi"]
   }
 }

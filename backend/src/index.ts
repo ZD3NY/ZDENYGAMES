@@ -2,6 +2,7 @@ import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import { router } from './routes';
+import { startSignupWorker } from './workers/signup';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -13,4 +14,8 @@ app.use('/api', router);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
+});
+
+startSignupWorker().catch((err) => {
+  console.error('Failed to start signup worker:', err);
 });

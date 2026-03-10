@@ -14,9 +14,23 @@ export default route(function () {
       ? createWebHistory
       : createWebHashHistory;
 
-  return createRouter({
+  const router = createRouter({
     scrollBehavior: () => ({ left: 0, top: 0 }),
     routes,
     history: createHistory(process.env.VUE_ROUTER_BASE),
   });
+
+  router.beforeEach((to) => {
+    const isAuthenticated = !!localStorage.getItem('accessToken');
+
+    if (to.meta.requiresAuth && !isAuthenticated) {
+      return { path: '/auth/sign-in' };
+    }
+
+    if (to.meta.guestOnly && isAuthenticated) {
+      return { path: '/' };
+    }
+  });
+
+  return router;
 });

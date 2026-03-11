@@ -139,6 +139,8 @@ type app struct {
 	g       *game
 	menuSel int
 	lw, lh  int
+	volume  float64
+	muted   bool
 }
 
 func (g *game) projectDropY(p piece) int {
@@ -168,6 +170,26 @@ func (a *app) resetGame() {
 
 	*a.g = *newGame(ctx)
 	a.g.rng = rng
+	a.applyVolume()
+}
+
+func (a *app) applyVolume() {
+	v := a.volume
+	if a.muted {
+		v = 0
+	}
+	if a.g.bgPlayer != nil {
+		a.g.bgPlayer.SetVolume(v * 0.3)
+	}
+	if a.g.dropSound != nil {
+		a.g.dropSound.SetVolume(v)
+	}
+	if a.g.clearSound != nil {
+		a.g.clearSound.SetVolume(v)
+	}
+	if a.g.gameOverSound != nil {
+		a.g.gameOverSound.SetVolume(v)
+	}
 }
 
 const (
@@ -243,7 +265,6 @@ func newGame(ctx *audio.Context) *game {
 	g.next = g.randPiece()
 
 	g.bgPlayer = loadWav(ctx, bgMusicWav)
-	g.bgPlayer.SetVolume(0.3)
 	g.bgPlayer.Play()
 
 	g.dropSound = loadWav(ctx, dropWav)
@@ -391,6 +412,42 @@ func (a *app) updateMenuInput() {
 }
 
 func (a *app) Update() error {
+	// M key to toggle mute (always active)
+	if inpututil.IsKeyJustPressed(ebiten.KeyM) {
+		a.muted = !a.muted
+		a.applyVolume()
+	}
+
+	// Volume slider + mute button mouse control (when menu is not open)
+	if !a.g.showMenu && a.lw > 0 {
+		mx, my := ebiten.CursorPosition()
+		lx, ly := windowToLogical(mx, my, a.lw, a.lh)
+
+		infoX := margin + boardW*cellPix + 20
+		sliderX, sliderY, sliderW, sliderH := infoX, margin+316, 140, 8
+		if ebiten.IsMouseButtonPressed(ebiten.MouseButtonLeft) {
+			if lx >= sliderX && lx <= sliderX+sliderW && ly >= sliderY-4 && ly <= sliderY+sliderH+4 {
+				v := float64(lx-sliderX) / float64(sliderW)
+				if v < 0 {
+					v = 0
+				}
+				if v > 1 {
+					v = 1
+				}
+				a.volume = v
+				a.applyVolume()
+			}
+		}
+
+		muteBtnY := margin + 334
+		if inpututil.IsMouseButtonJustPressed(ebiten.MouseButtonLeft) {
+			if lx >= infoX && lx < infoX+60 && ly >= muteBtnY && ly < muteBtnY+20 {
+				a.muted = !a.muted
+				a.applyVolume()
+			}
+		}
+	}
+
 	if inpututil.IsKeyJustPressed(ebiten.KeyR) {
 		a.resetGame()
 		return nil
@@ -609,6 +666,34 @@ func (a *app) Draw(screen *ebiten.Image) {
 	ebitenutil.DebugPrintAt(screen, "↑ rotate", infoX, offY+260)
 	ebitenutil.DebugPrintAt(screen, "Space hard drop", infoX, offY+280)
 
+	// Volume slider
+	ebitenutil.DebugPrintAt(screen, "Volume:", infoX, offY+300)
+	sliderX, sliderY, sliderW, sliderH := infoX, offY+316, 140, 8
+	ebitenutil.DrawRect(screen, float64(sliderX), float64(sliderY), float64(sliderW), float64(sliderH), color.RGBA{50, 50, 70, 255})
+	fillW := int(float64(sliderW) * a.volume)
+	fillCol := color.RGBA{90, 140, 220, 255}
+	if a.muted {
+		fillCol = color.RGBA{80, 80, 80, 255}
+	}
+	if fillW > 0 {
+		ebitenutil.DrawRect(screen, float64(sliderX), float64(sliderY), float64(fillW), float64(sliderH), fillCol)
+	}
+	knobX := sliderX + int(float64(sliderW)*a.volume) - 4
+	ebitenutil.DrawRect(screen, float64(knobX), float64(sliderY-3), 8, 14, color.RGBA{200, 220, 255, 255})
+
+	// Mute button
+	muteBtnY := offY + 334
+	muteBtnCol := color.RGBA{60, 60, 80, 255}
+	if a.muted {
+		muteBtnCol = color.RGBA{160, 50, 50, 255}
+	}
+	ebitenutil.DrawRect(screen, float64(infoX), float64(muteBtnY), 60, 20, muteBtnCol)
+	muteLabel := "Mute [M]"
+	if a.muted {
+		muteLabel = "Muted[M]"
+	}
+	ebitenutil.DebugPrintAt(screen, muteLabel, infoX+4, muteBtnY+5)
+
 	ghostY := a.g.projectDropY(a.g.cur)
 
 	ghostCol := color.RGBA{255, 64, 64, 200}
@@ -743,8 +828,10 @@ func main() {
 	audioCtx := audio.NewContext(44100)
 
 	game := &app{
-		g: newGame(audioCtx),
+		g:      newGame(audioCtx),
+		volume: 0.5,
 	}
+	game.applyVolume()
 
 	if err := ebiten.RunGame(game); err != nil {
 		log.Fatal(err)

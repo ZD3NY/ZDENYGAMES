@@ -21,8 +21,6 @@ COPY backend/tsconfig.json ./backend/tsconfig.json
 
 RUN pnpm --filter backend exec prisma generate && pnpm --filter backend build
 
-COPY backend/docker-entrypoint.sh /docker-entrypoint.sh
-RUN chmod +x /docker-entrypoint.sh
-
 EXPOSE 3000
-ENTRYPOINT ["/docker-entrypoint.sh"]
+
+CMD ["/bin/sh", "-c", "cd /app && pnpm --filter backend exec prisma migrate deploy && exec node /app/backend/dist/index.js"]

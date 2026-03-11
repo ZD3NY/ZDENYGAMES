@@ -17,6 +17,8 @@ RUN pnpm --filter frontend build
 FROM nginx:alpine
 
 COPY --from=builder /app/frontend/dist/spa /usr/share/nginx/html
-COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf.template
 
 EXPOSE 80
+
+CMD ["/bin/sh", "-c", "envsubst '${BACKEND_HOST} ${TETRIS_HOST}' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]

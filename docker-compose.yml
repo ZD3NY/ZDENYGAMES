@@ -74,6 +74,9 @@ services:
       dockerfile: frontend/Dockerfile
     ports:
       - "${PORT:-80}:80"
+    environment:
+      BACKEND_HOST: backend
+      TETRIS_HOST: tetris
     depends_on:
       - backend
       - tetris

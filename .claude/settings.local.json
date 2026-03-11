@@ -68,7 +68,14 @@
       "Bash(cd C:/Users/zdend/Desktop/business && docker compose exec tetris ls -lh /usr/share/nginx/html/ 2>&1)",
       "Bash(cd C:/Users/zdend/Desktop/business && docker compose exec tetris sh -c \"ls -lh /usr/share/nginx/html/\" 2>&1)",
       "Bash(cd C:/Users/zdend/Desktop/business && docker compose logs tetris --tail=30 2>&1)",
-      "Bash(cd C:/Users/zdend/Desktop/business && docker compose build frontend 2>&1 | tail -3 && docker compose up -d frontend 2>&1 | tail -3)"
+      "Bash(cd C:/Users/zdend/Desktop/business && docker compose build frontend 2>&1 | tail -3 && docker compose up -d frontend 2>&1 | tail -3)",
+      "Read(//c/Users/zdend/AppData/Local/**)",
+      "Read(//c/Users/zdend/AppData/Roaming/**)",
+      "Bash(where pnpm:*)",
+      "Bash(cmd /c \"where pnpm\")",
+      "Bash(npx pnpm:*)",
+      "Bash(cd C:/Users/zdend/Desktop/ZDENYGAMES/backend && npx prisma generate 2>&1)",
+      "Bash(grep -r \"submit\" /c/Users/zdend/Desktop/ZDENYGAMES/tetris/*.go 2>/dev/null | head -20)"
     ]
   }
 }

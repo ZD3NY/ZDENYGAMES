@@ -13,7 +13,7 @@ RUN GOOS=js GOARCH=wasm go build -o web/main.wasm .
 RUN cp "$(go env GOROOT)/lib/wasm/wasm_exec.js" web/
 
 # Stage 2: serve with nginx
-FROM nginx:alpine
+FROM nginx:stable-alpine
 
 COPY --from=builder /app/web /usr/share/nginx/html
 COPY nginx.conf /etc/nginx/conf.d/default.conf

@@ -265,6 +265,7 @@ func newGame(ctx *audio.Context) *game {
 	g.next = g.randPiece()
 
 	g.bgPlayer = loadWav(ctx, bgMusicWav)
+	g.bgPlayer.SetVolume(0)
 	g.bgPlayer.Play()
 
 	g.dropSound = loadWav(ctx, dropWav)
@@ -842,6 +843,7 @@ func main() {
 	game := &app{
 		g:      newGame(audioCtx),
 		volume: 0.5,
+		muted:  true,
 	}
 	game.applyVolume()
 

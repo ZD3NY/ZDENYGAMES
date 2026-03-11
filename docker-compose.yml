@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_DB: ${POSTGRES_DB:-mydb}
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -26,12 +26,12 @@ services:
   mailhog:
     image: mailhog/mailhog
     ports:
-      - "8025:8025"   # web UI to view caught emails
+      - "8026:8025"   # web UI to view caught emails
 
   backend:
     build:
-      context: .
-      dockerfile: backend/Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-user}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-mydb}
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
@@ -70,11 +70,12 @@ services:
 
   frontend:
     build:
-      context: .
-      dockerfile: frontend/Dockerfile
+      context: ./frontend
+      dockerfile: Dockerfile
     ports:
       - "${PORT:-80}:80"
     environment:
+      BACKEND_URL: http://backend:3000
       BACKEND_HOST: backend
       TETRIS_HOST: tetris
     depends_on:

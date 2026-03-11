@@ -10,9 +10,10 @@ RUN npm install
 COPY . .
 RUN quasar build
 
-FROM nginx:alpine
+FROM nginx:stable-alpine
 
 COPY --from=builder /app/dist/spa /usr/share/nginx/html
+COPY nginx-main.conf /etc/nginx/nginx.conf
 COPY nginx.conf /etc/nginx/conf.d/default.conf.template
 
 EXPOSE 80

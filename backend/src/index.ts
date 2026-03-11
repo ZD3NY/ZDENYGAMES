@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import { router } from './routes';
 import { startSignupWorker } from './workers/signup';
+import { getPublishChannel } from './lib/rabbitmq';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -18,4 +19,8 @@ app.listen(PORT, () => {
 
 startSignupWorker().catch((err) => {
   console.error('Failed to start signup worker:', err);
+});
+
+getPublishChannel().catch((err) => {
+  console.error('Failed to initialize publish channel:', err);
 });

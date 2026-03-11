@@ -83,18 +83,43 @@
 
   <script src="wasm_exec.js"></script>
   <script>
-    // Called by WASM when game ends
-    window.submitScore = function(score, lines) {
-      const token = localStorage.getItem('accessToken');
-      if (!token) return;
-      fetch('/api/scores', {
+    async function refreshTokens() {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) return null;
+      const res = await fetch('/api/auth/refresh', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ' + token,
-        },
-        body: JSON.stringify({ score: score, lines: lines }),
-      }).then(() => loadLeaderboard()).catch(() => {});
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
+      return data.accessToken;
+    }
+
+    // Called by WASM when game ends
+    window.submitScore = async function(score, lines) {
+      let token = localStorage.getItem('accessToken');
+      if (!token) return;
+
+      let res = await fetch('/api/scores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ score, lines }),
+      }).catch(() => null);
+
+      if (res && res.status === 401) {
+        token = await refreshTokens();
+        if (!token) return;
+        res = await fetch('/api/scores', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ score, lines }),
+        }).catch(() => null);
+      }
+
+      if (res && res.ok) loadLeaderboard();
     };
 
     function loadLeaderboard() {

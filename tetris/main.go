@@ -343,8 +343,20 @@ func (g *game) lockPiece() {
 		g.score += 800
 	}
 	g.lines += cleared
-	if g.lines > 0 && g.lines%10 == 0 && g.gravityMS > 120 {
-		g.gravityMS -= 40
+	if g.lines > 0 && g.lines%10 == 0 && g.gravityMS > 200 {
+		var step int
+		switch {
+		case g.gravityMS > 380:
+			step = 80
+		case g.gravityMS > 280:
+			step = 50
+		default:
+			step = 25
+		}
+		g.gravityMS -= step
+		if g.gravityMS < 200 {
+			g.gravityMS = 200
+		}
 	}
 	g.cur = g.next
 	g.cur.x, g.cur.y = boardW/2-2, -1

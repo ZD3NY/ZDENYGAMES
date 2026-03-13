@@ -76,10 +76,6 @@
         </div>
         <div class="col-auto row items-center q-gutter-sm q-mt-xs">
           <q-btn flat round dense icon="refresh" class="text-amber-8" :loading="loadingScores" @click="fetchLeaderboard" />
-          <a href="/wolfpack/" target="_blank" class="play-btn play-btn--forest font-cinzel">
-            <q-icon name="forest" size="14px" class="q-mr-xs" />
-            Wolfpack
-          </a>
           <a href="/tetris/" target="_blank" class="play-btn font-cinzel">
             <q-icon name="videogame_asset" size="14px" class="q-mr-xs" />
             Tetris

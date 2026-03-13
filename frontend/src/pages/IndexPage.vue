@@ -225,7 +225,7 @@ const loadingScores = ref(false);
 async function fetchLeaderboard() {
   loadingScores.value = true;
   try {
-    const { data } = await api.get<LeaderboardEntry[]>('/scores/leaderboard');
+    const { data } = await api.get<LeaderboardEntry[]>('/scores/tetris/leaderboard');
     leaderboard.value = data;
   } catch {
     // silently fail
@@ -240,7 +240,7 @@ const loadingWolfpack = ref(false);
 async function fetchWolfpackLeaderboard() {
   loadingWolfpack.value = true;
   try {
-    const { data } = await api.get<LeaderboardEntry[]>('/scores/leaderboard');
+    const { data } = await api.get<LeaderboardEntry[]>('/scores/wolfpack/leaderboard');
     wolfpackLeaderboard.value = data;
   } catch {
     // silently fail

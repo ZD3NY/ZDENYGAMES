@@ -15,15 +15,25 @@ model User {
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   refreshTokens RefreshToken[]
-  scores        Score[]
+  tetrisScores  ScoreTetris[]
+  wolfpackScores ScoreWolfpack[]
 }
 
-model Score {
+model ScoreTetris {
   id        String   @id @default(cuid())
   userId    String   @unique
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   score     Int
   lines     Int
+  createdAt DateTime @default(now())
+}
+
+model ScoreWolfpack {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  score     Int
+  waves     Int
   createdAt DateTime @default(now())
 }
 

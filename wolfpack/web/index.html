@@ -100,19 +100,19 @@
       let token = localStorage.getItem('accessToken');
       if (!token) return;
 
-      let res = await fetch('/api/scores', {
+      let res = await fetch('/api/scores/wolfpack', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify({ score, lines: waves }),
+        body: JSON.stringify({ score, waves }),
       }).catch(() => null);
 
       if (res && res.status === 401) {
         token = await refreshTokens();
         if (!token) return;
-        res = await fetch('/api/scores', {
+        res = await fetch('/api/scores/wolfpack', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-          body: JSON.stringify({ score, lines: waves }),
+          body: JSON.stringify({ score, waves }),
         }).catch(() => null);
       }
 
@@ -120,7 +120,7 @@
     };
 
     function loadLeaderboard() {
-      fetch('/api/scores/leaderboard')
+      fetch('/api/scores/wolfpack/leaderboard')
         .then(r => r.json())
         .then(data => {
           const list = document.getElementById('lb-list');

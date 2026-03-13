@@ -18,4 +18,4 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf.template
 
 EXPOSE 80
 
-CMD ["/bin/sh", "-c", "envsubst '${BACKEND_URL} ${BACKEND_HOST} ${TETRIS_URL} ${TETRIS_HOST}' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]
+CMD ["/bin/sh", "-c", "envsubst '${BACKEND_URL} ${BACKEND_HOST} ${TETRIS_URL} ${TETRIS_HOST} ${WOLFPACK_URL} ${WOLFPACK_HOST}' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"]

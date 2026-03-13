@@ -141,7 +141,7 @@
     }
 
     const go = new Go();
-    WebAssembly.instantiateStreaming(fetch('main.wasm'), go.importObject)
+    WebAssembly.instantiateStreaming(fetch('main.wasm?v=2'), go.importObject)
       .then(result => {
         document.getElementById('loading').style.display = 'none';
         document.getElementById('wrapper').style.display = 'flex';

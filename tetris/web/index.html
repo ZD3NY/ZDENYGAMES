@@ -103,7 +103,7 @@
       let token = localStorage.getItem('accessToken');
       if (!token) return;
 
-      let res = await fetch('/api/scores', {
+      let res = await fetch('/api/scores/tetris', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
         body: JSON.stringify({ score, lines }),
@@ -112,7 +112,7 @@
       if (res && res.status === 401) {
         token = await refreshTokens();
         if (!token) return;
-        res = await fetch('/api/scores', {
+        res = await fetch('/api/scores/tetris', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
           body: JSON.stringify({ score, lines }),
@@ -123,7 +123,7 @@
     };
 
     function loadLeaderboard() {
-      fetch('/api/scores/leaderboard')
+      fetch('/api/scores/tetris/leaderboard')
         .then(r => r.json())
         .then(data => {
           const list = document.getElementById('lb-list');

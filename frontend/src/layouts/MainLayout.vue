@@ -29,7 +29,13 @@
           <q-item-section avatar>
             <q-icon name="videogame_asset" class="text-amber-6" />
           </q-item-section>
-          <q-item-section class="text-amber-5 nav-label">The Arena</q-item-section>
+          <q-item-section class="text-amber-5 nav-label">Tetris</q-item-section>
+        </q-item>
+        <q-item clickable v-ripple tag="a" href="/wolfpack/" target="_blank" class="nav-item nav-item--forest font-cinzel">
+          <q-item-section avatar>
+            <q-icon name="forest" class="text-green-6" />
+          </q-item-section>
+          <q-item-section class="text-green-5 nav-label">Wolfpack</q-item-section>
         </q-item>
       </q-list>
 
@@ -116,6 +122,11 @@ async function onSignOut() {
 .nav-item.q-router-link--active {
   border-left-color: #e8960e;
   background: rgba(220, 140, 10, 0.12) !important;
+}
+
+.nav-item--forest:hover {
+  border-left-color: #5acc28 !important;
+  background: rgba(60, 160, 20, 0.12) !important;
 }
 
 .nav-label {

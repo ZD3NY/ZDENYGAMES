@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Wolfpack</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%; height: 100%;
+      background: #10160e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: sans-serif;
+      color: #ddd;
+    }
+    #back {
+      position: fixed;
+      top: 12px; left: 12px;
+      color: #aaa;
+      text-decoration: none;
+      font-size: 13px;
+      background: rgba(0,0,0,0.4);
+      padding: 6px 12px;
+      border-radius: 4px;
+    }
+    #back:hover { color: #fff; }
+    #wrapper {
+      display: flex;
+      gap: 24px;
+      align-items: flex-start;
+    }
+    canvas { display: block; image-rendering: pixelated; }
+    #loading { color: #888; font-size: 14px; }
+
+    #leaderboard {
+      width: 200px;
+      background: #1a1f18;
+      border: 1px solid #3a4a2a;
+      border-radius: 8px;
+      padding: 12px;
+    }
+    #leaderboard h3 {
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #7a9060;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    #leaderboard ol { list-style: none; padding: 0; }
+    #leaderboard li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 4px;
+      border-bottom: 1px solid #2a3020;
+      font-size: 12px;
+    }
+    #leaderboard li:last-child { border-bottom: none; }
+    #leaderboard .rank  { color: #666; width: 18px; }
+    #leaderboard .name  { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 6px; }
+    #leaderboard .score { color: #9aba60; font-weight: bold; }
+    #leaderboard .waves { color: #7a8a50; font-size: 11px; margin-left: 4px; }
+    #leaderboard .empty { color: #555; font-size: 12px; text-align: center; padding: 8px 0; }
+  </style>
+</head>
+<body>
+  <a href="/" id="back">← Back to site</a>
+  <p id="loading">Loading game...</p>
+
+  <div id="wrapper" style="display:none">
+    <canvas id="game-canvas"></canvas>
+    <div id="leaderboard">
+      <h3>Wolfpack</h3>
+      <ol id="lb-list"><li class="empty">Loading...</li></ol>
+    </div>
+  </div>
+
+  <script src="wasm_exec.js"></script>
+  <script>
+    async function refreshTokens() {
+      const refreshToken = localStorage.getItem('refreshToken');
+      if (!refreshToken) return null;
+      const res = await fetch('/api/auth/refresh', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
+      });
+      if (!res.ok) return null;
+      const data = await res.json();
+      localStorage.setItem('accessToken', data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
+      return data.accessToken;
+    }
+
+    window.submitScore = async function(score, waves) {
+      let token = localStorage.getItem('accessToken');
+      if (!token) return;
+
+      let res = await fetch('/api/scores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ score, lines: waves }),
+      }).catch(() => null);
+
+      if (res && res.status === 401) {
+        token = await refreshTokens();
+        if (!token) return;
+        res = await fetch('/api/scores', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ score, lines: waves }),
+        }).catch(() => null);
+      }
+
+      if (res && res.ok) loadLeaderboard();
+    };
+
+    function loadLeaderboard() {
+      fetch('/api/scores/leaderboard')
+        .then(r => r.json())
+        .then(data => {
+          const list = document.getElementById('lb-list');
+          if (!data.length) {
+            list.innerHTML = '<li class="empty">No survivors yet</li>';
+            return;
+          }
+          list.innerHTML = data.map(e =>
+            `<li>
+              <span class="rank">#${e.rank}</span>
+              <span class="name" title="${e.name}">${e.name}</span>
+              <span class="score">${e.score.toLocaleString()}</span>
+              <span class="waves">w${e.lines}</span>
+            </li>`
+          ).join('');
+        })
+        .catch(() => {});
+    }
+
+    const go = new Go();
+    WebAssembly.instantiateStreaming(fetch('main.wasm'), go.importObject)
+      .then(result => {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('wrapper').style.display = 'flex';
+        loadLeaderboard();
+        go.run(result.instance);
+      })
+      .catch(err => {
+        document.getElementById('loading').textContent = 'Failed to load: ' + err;
+      });
+  </script>
+</body>
+</html>

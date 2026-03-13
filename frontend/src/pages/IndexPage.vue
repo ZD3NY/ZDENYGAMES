@@ -125,6 +125,75 @@
       </table>
     </div>
 
+    <!-- Rune divider -->
+    <div class="rune-divider q-mb-xl q-mt-xl">
+      <div class="rune-line" />
+      <span class="rune-symbol font-cinzel">🐺</span>
+      <div class="rune-line" />
+    </div>
+
+    <!-- Wolfpack -->
+    <div class="wood-card wood-card--wide">
+      <div class="wood-card__notch" />
+      <div class="row items-start q-mb-lg">
+        <div class="col">
+          <div class="wood-card__label font-cinzel">The Dark Wood</div>
+          <div class="section-heading font-cinzel-deco flicker q-mt-xs">Wolfpack Leaderboard</div>
+          <div class="font-crimson text-brown-4" style="font-style: italic; font-size: 1rem;">
+            Those who survived the longest in the forest
+          </div>
+        </div>
+        <div class="col-auto row items-center q-gutter-sm q-mt-xs">
+          <q-btn flat round dense icon="refresh" class="text-amber-8" :loading="loadingWolfpack" @click="fetchWolfpackLeaderboard" />
+          <a href="/wolfpack/" target="_blank" class="play-btn font-cinzel">
+            <q-icon name="forest" size="14px" class="q-mr-xs" />
+            Enter the Forest
+          </a>
+        </div>
+      </div>
+
+      <table class="ledger-table">
+        <thead>
+          <tr>
+            <th class="font-cinzel">#</th>
+            <th class="font-cinzel text-left">Name</th>
+            <th class="font-cinzel text-right">Score</th>
+            <th class="font-cinzel text-right">Waves</th>
+            <th class="font-cinzel text-right">Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-if="loadingWolfpack">
+            <td colspan="5" class="text-center q-py-lg">
+              <q-spinner color="warning" size="28px" />
+            </td>
+          </tr>
+          <tr v-else-if="!wolfpackLeaderboard.length">
+            <td colspan="5" class="empty-row font-crimson">
+              No soul has yet survived the wolfpack — be the first.
+            </td>
+          </tr>
+          <tr
+            v-for="entry in wolfpackLeaderboard"
+            :key="entry.rank"
+            class="ledger-row"
+            :class="entry.rank <= 3 ? `ledger-row--top${entry.rank}` : ''"
+          >
+            <td class="rank-cell font-cinzel">
+              <span v-if="entry.rank === 1" class="rank-1">I</span>
+              <span v-else-if="entry.rank === 2" class="rank-2">II</span>
+              <span v-else-if="entry.rank === 3" class="rank-3">III</span>
+              <span v-else class="rank-n">{{ toRoman(entry.rank) }}</span>
+            </td>
+            <td class="name-cell font-crimson">{{ entry.name }}</td>
+            <td class="score-cell font-cinzel text-right">{{ entry.score.toLocaleString() }}</td>
+            <td class="lines-cell font-crimson text-right">{{ entry.lines }}</td>
+            <td class="date-cell font-crimson text-right">{{ formatDate(entry.date) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
     <!-- Footer flavor text -->
     <div class="page-footer font-crimson q-mt-xl">
       <span>"Deep in the forest, something watches. Keep your fire burning."</span>
@@ -165,6 +234,21 @@ async function fetchLeaderboard() {
   }
 }
 
+const wolfpackLeaderboard = ref<LeaderboardEntry[]>([]);
+const loadingWolfpack = ref(false);
+
+async function fetchWolfpackLeaderboard() {
+  loadingWolfpack.value = true;
+  try {
+    const { data } = await api.get<LeaderboardEntry[]>('/scores/leaderboard');
+    wolfpackLeaderboard.value = data;
+  } catch {
+    // silently fail
+  } finally {
+    loadingWolfpack.value = false;
+  }
+}
+
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
@@ -174,7 +258,10 @@ function toRoman(n: number) {
   return ROMAN[n] ?? String(n);
 }
 
-onMounted(fetchLeaderboard);
+onMounted(() => {
+  fetchLeaderboard();
+  fetchWolfpackLeaderboard();
+});
 </script>
 
 <style scoped>

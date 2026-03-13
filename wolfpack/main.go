@@ -19,14 +19,15 @@ const (
 
 	playerSpeed    = 2.8
 	baseWolfSpeed  = 0.85
-	attackRange    = 62.0
-	halfAttackArc  = math.Pi / 2.4 // ~75 deg total sweep
+	attackRange    = 48.0 // reduced from 62
+	halfAttackArc  = math.Pi / 2.4
 	attackCooldown = 480 * time.Millisecond
-	attackDuration = 180 * time.Millisecond
+	attackDuration = 220 * time.Millisecond
 	damageCooldown = 900 * time.Millisecond
 
 	playerR = 9.0
 	wolfR   = 8.0
+	treeR   = 18.0
 )
 
 type vec2 struct{ x, y float64 }
@@ -64,9 +65,18 @@ func angleDiff(a, b float64) float64 {
 	return d
 }
 
+// Trees — collidable
+var treePosns = []vec2{
+	{55, 55}, {505, 55}, {55, 425}, {505, 425},
+	{280, 35}, {280, 445}, {35, 240}, {525, 240},
+	{130, 140}, {430, 140}, {130, 340}, {430, 340},
+	{200, 80}, {360, 80}, {200, 400}, {360, 400},
+}
+
 type wolf struct {
-	pos   vec2
-	alive bool
+	pos    vec2
+	alive  bool
+	diedAt time.Time
 }
 
 type phase int
@@ -160,9 +170,26 @@ func (g *gameState) doAttack() {
 		}
 		if math.Abs(angleDiff(d.angle(), fa)) <= halfAttackArc {
 			g.wolves[i].alive = false
+			g.wolves[i].diedAt = time.Now()
 			g.score += 10
 		}
 	}
+}
+
+// Push player out of any tree overlap
+func (g *gameState) resolveTreeCollisions() {
+	for _, t := range treePosns {
+		d := sub(g.playerPos, t)
+		minDist := playerR + treeR
+		if d.len() < minDist {
+			n := d.norm()
+			g.playerPos.x = t.x + n.x*minDist
+			g.playerPos.y = t.y + n.y*minDist
+		}
+	}
+	// Keep in bounds after resolution
+	g.playerPos.x = clamp(g.playerPos.x, playerR, screenW-playerR)
+	g.playerPos.y = clamp(g.playerPos.y, playerR, screenH-playerR)
 }
 
 type app struct {
@@ -213,8 +240,9 @@ func (a *app) Update() error {
 		}
 		g.playerPos.x = clamp(g.playerPos.x+dx, playerR, screenW-playerR)
 		g.playerPos.y = clamp(g.playerPos.y+dy, playerR, screenH-playerR)
+		g.resolveTreeCollisions()
 
-		// Face mouse (cursor is already in logical coords in Ebiten)
+		// Face mouse
 		mx, my := ebiten.CursorPosition()
 		d := sub(vec2{float64(mx), float64(my)}, g.playerPos)
 		if d.len() > 5 {
@@ -281,60 +309,79 @@ func (a *app) Update() error {
 
 func (a *app) Draw(screen *ebiten.Image) {
 	g := a.g
+	now := time.Now()
 
 	// Forest floor
 	screen.Fill(color.RGBA{16, 30, 14, 255})
 
-	// Decorative trees (non-collidable)
-	treeDark := color.RGBA{22, 50, 18, 255}
-	treeMid := color.RGBA{18, 42, 14, 255}
-	treeSpots := [][2]float64{
-		{55, 55}, {505, 55}, {55, 425}, {505, 425},
-		{280, 35}, {280, 445}, {35, 240}, {525, 240},
-		{130, 140}, {430, 140}, {130, 340}, {430, 340},
-		{200, 80}, {360, 80}, {200, 400}, {360, 400},
-	}
-	for _, t := range treeSpots {
-		drawCircle(screen, t[0], t[1], 20, treeDark)
-		drawCircle(screen, t[0], t[1], 13, treeMid)
-		drawCircle(screen, t[0], t[1], 6, color.RGBA{14, 35, 10, 255})
+	// Trees — visible, collidable
+	for _, t := range treePosns {
+		drawTree(screen, t.x, t.y)
 	}
 
-	// Wolves
+	// Dead wolf fade-out (300ms)
+	for _, w := range g.wolves {
+		if !w.alive && !w.diedAt.IsZero() {
+			elapsed := now.Sub(w.diedAt)
+			if elapsed < 300*time.Millisecond {
+				alpha := uint8(180 * (1.0 - float64(elapsed)/float64(300*time.Millisecond)))
+				drawCircle(screen, w.pos.x, w.pos.y, wolfR, color.RGBA{220, 80, 40, alpha})
+			}
+		}
+	}
+
+	// Live wolves
 	for _, w := range g.wolves {
 		if !w.alive {
 			continue
 		}
-		drawCircle(screen, w.pos.x, w.pos.y, wolfR, color.RGBA{185, 55, 35, 255})
-		// glowing eyes
-		drawCircle(screen, w.pos.x-3, w.pos.y-2, 2, color.RGBA{255, 210, 40, 255})
-		drawCircle(screen, w.pos.x+3, w.pos.y-2, 2, color.RGBA{255, 210, 40, 255})
+		// Body
+		drawCircle(screen, w.pos.x, w.pos.y, wolfR, color.RGBA{160, 50, 30, 255})
+		drawCircle(screen, w.pos.x, w.pos.y, wolfR-2, color.RGBA{185, 65, 40, 255})
+		// Glowing eyes
+		drawCircle(screen, w.pos.x-3, w.pos.y-2, 2, color.RGBA{255, 215, 0, 255})
+		drawCircle(screen, w.pos.x+3, w.pos.y-2, 2, color.RGBA{255, 215, 0, 255})
 	}
 
-	// Attack arc
+	// Slash animation — sweeping arc
 	if g.attackActive {
+		elapsed := now.Sub(g.attackTime)
+		progress := float64(elapsed) / float64(attackDuration)
+		if progress > 1 {
+			progress = 1
+		}
 		fa := g.playerFacing.angle()
-		arcSteps := 18
-		for i := 0; i <= arcSteps; i++ {
-			t := float64(i) / float64(arcSteps)
-			angle := fa - halfAttackArc + t*halfAttackArc*2
+		startAngle := fa - halfAttackArc
+		sweepEnd := startAngle + progress*halfAttackArc*2
+
+		// Draw swept trail lines (fade as progress increases)
+		steps := 16
+		for i := 0; i <= steps; i++ {
+			t := float64(i) / float64(steps)
+			angle := startAngle + t*(sweepEnd-startAngle)
+			alpha := uint8(200 * (1.0 - t*0.6) * (1.0 - progress*0.4))
 			ex := g.playerPos.x + math.Cos(angle)*attackRange
 			ey := g.playerPos.y + math.Sin(angle)*attackRange
-			ebitenutil.DrawLine(screen, g.playerPos.x, g.playerPos.y, ex, ey, color.RGBA{255, 220, 80, 160})
+			ebitenutil.DrawLine(screen, g.playerPos.x, g.playerPos.y, ex, ey, color.RGBA{255, 220, 80, alpha})
 		}
+
+		// Bright blade tip at sweep front
+		tipX := g.playerPos.x + math.Cos(sweepEnd)*attackRange
+		tipY := g.playerPos.y + math.Sin(sweepEnd)*attackRange
+		drawCircle(screen, tipX, tipY, 4, color.RGBA{255, 245, 160, 220})
+		ebitenutil.DrawLine(screen, g.playerPos.x, g.playerPos.y, tipX, tipY, color.RGBA{255, 235, 100, 200})
 	}
 
-	// Player
-	drawCircle(screen, g.playerPos.x, g.playerPos.y, playerR, color.RGBA{235, 175, 55, 255})
-	// Facing dot
-	fx := g.playerPos.x + g.playerFacing.x*14
-	fy := g.playerPos.y + g.playerFacing.y*14
-	drawCircle(screen, fx, fy, 2, color.RGBA{255, 240, 120, 255})
+	// Player body
+	drawCircle(screen, g.playerPos.x, g.playerPos.y, playerR, color.RGBA{200, 140, 60, 255})
+	drawCircle(screen, g.playerPos.x, g.playerPos.y, playerR-2, color.RGBA{230, 165, 75, 255})
 
-	// Damage flash: red tint on screen edges when recently hit
-	now := time.Now()
+	// Axe — handle + blade
+	drawAxe(screen, g.playerPos, g.playerFacing, g.attackActive, now.Sub(g.attackTime))
+
+	// Damage flash
 	if now.Sub(g.lastDamage) < 300*time.Millisecond {
-		ebitenutil.DrawRect(screen, 0, 0, screenW, screenH, color.RGBA{180, 0, 0, 60})
+		ebitenutil.DrawRect(screen, 0, 0, screenW, screenH, color.RGBA{180, 0, 0, 55})
 	}
 
 	// HUD
@@ -351,31 +398,61 @@ func (a *app) Draw(screen *ebiten.Image) {
 	if g.phase == phasePlay {
 		ebitenutil.DebugPrintAt(screen, fmt.Sprintf("Wolves: %d", g.aliveWolves()), 10, 58)
 	}
-
-	// Controls hint (bottom)
 	ebitenutil.DebugPrintAt(screen, "WASD: move  Mouse: aim  Click/Space: attack", 10, screenH-20)
 
 	// Overlays
 	switch g.phase {
 	case phaseMenu:
-		drawOverlay(screen,
-			"WOLFPACK",
-			"Survive the forest night",
-			"Click or Space to begin",
-			"")
+		drawOverlay(screen, "WOLFPACK", "Survive the forest night", "Click or Space to begin", "")
 	case phaseWaveClear:
-		drawOverlay(screen,
-			fmt.Sprintf("WAVE %d CLEARED", g.wave),
-			fmt.Sprintf("Score: %d", g.score),
-			"Next wave coming...",
-			"")
+		drawOverlay(screen, fmt.Sprintf("WAVE %d CLEARED", g.wave), fmt.Sprintf("Score: %d", g.score), "Next wave coming...", "")
 	case phaseOver:
-		drawOverlay(screen,
-			"YOU FELL",
-			fmt.Sprintf("Wave %d  |  Score: %d", g.wave, g.score),
-			"R - Play Again",
-			"Esc - Exit")
+		drawOverlay(screen, "YOU FELL", fmt.Sprintf("Wave %d  |  Score: %d", g.wave, g.score), "R - Play Again", "Esc - Exit")
 	}
+}
+
+func drawTree(screen *ebiten.Image, cx, cy float64) {
+	// Shadow/roots
+	drawCircle(screen, cx, cy+3, 20, color.RGBA{10, 20, 8, 180})
+	// Outer canopy (dark edge)
+	drawCircle(screen, cx, cy, 18, color.RGBA{28, 72, 22, 255})
+	// Main canopy
+	drawCircle(screen, cx, cy, 14, color.RGBA{45, 110, 35, 255})
+	// Highlight (lighter patch top-left)
+	drawCircle(screen, cx-4, cy-4, 7, color.RGBA{65, 140, 48, 255})
+	// Trunk center
+	drawCircle(screen, cx, cy+2, 4, color.RGBA{80, 50, 20, 255})
+}
+
+func drawAxe(screen *ebiten.Image, pos, facing vec2, swinging bool, elapsed time.Duration) {
+	// Rotate axe during swing
+	angle := facing.angle()
+	if swinging {
+		progress := float64(elapsed) / float64(attackDuration)
+		if progress > 1 {
+			progress = 1
+		}
+		angle += -halfAttackArc + progress*halfAttackArc*2
+	}
+
+	dir := vec2{math.Cos(angle), math.Sin(angle)}
+	perp := vec2{-dir.y, dir.x}
+
+	handleStart := vec2{pos.x + dir.x*playerR, pos.y + dir.y*playerR}
+	handleEnd := vec2{pos.x + dir.x*(playerR+14), pos.y + dir.y*(playerR+14)}
+
+	// Handle
+	ebitenutil.DrawLine(screen, handleStart.x, handleStart.y, handleEnd.x, handleEnd.y, color.RGBA{140, 90, 35, 255})
+
+	// Blade (perpendicular bar at handle end)
+	blade1 := vec2{handleEnd.x + perp.x*7, handleEnd.y + perp.y*7}
+	blade2 := vec2{handleEnd.x - perp.x*4, handleEnd.y - perp.y*4}
+	ebitenutil.DrawLine(screen, blade1.x, blade1.y, blade2.x, blade2.y, color.RGBA{200, 210, 220, 255})
+	// Blade edge highlight
+	ebitenutil.DrawLine(screen,
+		blade1.x+dir.x*2, blade1.y+dir.y*2,
+		blade2.x+dir.x*2, blade2.y+dir.y*2,
+		color.RGBA{230, 240, 255, 180})
 }
 
 func drawOverlay(screen *ebiten.Image, title, sub, line1, line2 string) {

@@ -14,7 +14,16 @@ scoresRouter.post('/', requireAuth, async (req: Request, res: Response) => {
   }
 
   try {
-    const entry = await prisma.score.create({ data: { userId, score, lines } });
+    const existing = await prisma.score.findUnique({ where: { userId } });
+    if (existing && existing.score >= score) {
+      res.status(200).json(existing);
+      return;
+    }
+    const entry = await prisma.score.upsert({
+      where: { userId },
+      update: { score, lines, createdAt: new Date() },
+      create: { userId, score, lines },
+    });
     res.status(201).json(entry);
   } catch (err) {
     console.error('Score submit error:', err);

@@ -76,9 +76,13 @@
         </div>
         <div class="col-auto row items-center q-gutter-sm q-mt-xs">
           <q-btn flat round dense icon="refresh" class="text-amber-8" :loading="loadingScores" @click="fetchLeaderboard" />
+          <a href="/wolfpack/" target="_blank" class="play-btn play-btn--forest font-cinzel">
+            <q-icon name="forest" size="14px" class="q-mr-xs" />
+            Wolfpack
+          </a>
           <a href="/tetris/" target="_blank" class="play-btn font-cinzel">
             <q-icon name="videogame_asset" size="14px" class="q-mr-xs" />
-            Enter the Arena
+            Tetris
           </a>
         </div>
       </div>
@@ -133,7 +137,7 @@
     </div>
 
     <!-- Wolfpack -->
-    <div class="wood-card wood-card--wide">
+    <div class="wood-card wood-card--wide wood-card--forest">
       <div class="wood-card__notch" />
       <div class="row items-start q-mb-lg">
         <div class="col">
@@ -152,7 +156,7 @@
         </div>
       </div>
 
-      <table class="ledger-table">
+      <table class="ledger-table ledger-table--forest">
         <thead>
           <tr>
             <th class="font-cinzel">#</th>
@@ -532,6 +536,87 @@ onMounted(() => {
   0%, 100% { text-shadow: 0 0 10px #e8960e, 0 0 28px rgba(230, 140, 10, 0.6); }
   33%       { text-shadow: 0 0 7px  #d07808, 0 0 18px rgba(200, 110, 10, 0.4); }
   66%       { text-shadow: 0 0 14px #f0b020, 0 0 35px rgba(250, 170, 20, 0.7); }
+}
+
+/* Wolfpack forest-green card theme */
+.wood-card--forest {
+  background:
+    repeating-linear-gradient(
+      89.5deg,
+      transparent 0,
+      transparent 5px,
+      rgba(0,0,0,0.05) 5px,
+      rgba(0,0,0,0.05) 10px
+    ),
+    linear-gradient(165deg, #0c1e0a 0%, #091508 60%, #0b1a09 100%);
+  border-color: #2a5a1a;
+  box-shadow:
+    0 4px 24px rgba(0,0,0,0.6),
+    inset 0 1px 0 rgba(80,180,40,0.10),
+    inset 0 -1px 0 rgba(0,0,0,0.3);
+}
+.wood-card--forest:hover {
+  border-color: #4a8a28;
+  box-shadow:
+    0 4px 28px rgba(0,0,0,0.6),
+    0 0 22px rgba(60,160,20,0.09),
+    inset 0 1px 0 rgba(80,180,40,0.16);
+}
+.wood-card--forest .wood-card__notch {
+  background: linear-gradient(to right, transparent, rgba(80,180,40,0.45), transparent);
+}
+.wood-card--forest .wood-card__label {
+  color: #4a8030;
+}
+.wood-card--forest .section-heading {
+  color: #7acc40;
+  text-shadow: 0 0 10px rgba(100,200,40,0.5), 0 0 28px rgba(80,180,20,0.35);
+}
+
+/* Forest leaderboard table */
+.ledger-table--forest thead tr {
+  border-bottom-color: #2a5a1a;
+}
+.ledger-table--forest thead th {
+  color: #4a7828;
+}
+.ledger-table--forest tbody td {
+  border-bottom-color: rgba(40,100,15,0.45);
+  color: #7aaa50;
+}
+.ledger-table--forest .ledger-row:hover td {
+  background: rgba(40,120,15,0.12);
+}
+.ledger-table--forest .ledger-row--top1 td { background: rgba(80,180,20,0.08); }
+.ledger-table--forest .ledger-row--top2 td { background: rgba(60,140,20,0.05); }
+.ledger-table--forest .ledger-row--top3 td { background: rgba(50,110,15,0.04); }
+.ledger-table--forest .name-cell  { color: #9acc60; }
+.ledger-table--forest .score-cell {
+  color: #7adf30;
+  text-shadow: 0 0 6px rgba(100,210,30,0.4);
+}
+.ledger-table--forest .lines-cell { color: #5a8a30; }
+.ledger-table--forest .date-cell  { color: #4a7025; }
+.ledger-table--forest .empty-row  { color: #4a7028; }
+.ledger-table--forest .rank-1 {
+  color: #88ee30;
+  text-shadow: 0 0 8px rgba(120,230,30,0.7);
+}
+.ledger-table--forest .rank-2 { color: #78bb58; }
+.ledger-table--forest .rank-3 { color: #5a8a38; }
+.ledger-table--forest .rank-n { color: #4a6a28; }
+
+/* Wolfpack play button (green variant) */
+.play-btn--forest {
+  color: #5acc28;
+  border-color: #2a5a14;
+  background: rgba(15,40,8,0.7);
+}
+.play-btn--forest:hover {
+  background: rgba(25,70,12,0.85);
+  border-color: #5acc28;
+  color: #7aee40;
+  text-shadow: 0 0 8px rgba(90,200,30,0.55);
 }
 
 /* Footer */

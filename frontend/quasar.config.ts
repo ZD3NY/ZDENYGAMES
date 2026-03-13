@@ -30,7 +30,7 @@ export default defineConfig((_ctx) => {
     },
 
     framework: {
-      config: {},
+      config: { dark: true },
       plugins: ['Notify', 'Dialog', 'Loading'],
     },
 

@@ -193,7 +193,16 @@ func (g *gameState) resolveTreeCollisions() {
 }
 
 type app struct {
-	g *gameState
+	g  *gameState
+	bg *ebiten.Image
+}
+
+func (a *app) initBG() {
+	a.bg = ebiten.NewImage(screenW, screenH)
+	a.bg.Fill(color.RGBA{16, 30, 14, 255})
+	for _, t := range treePosns {
+		drawTree(a.bg, t.x, t.y)
+	}
 }
 
 func (a *app) Update() error {
@@ -311,13 +320,8 @@ func (a *app) Draw(screen *ebiten.Image) {
 	g := a.g
 	now := time.Now()
 
-	// Forest floor
-	screen.Fill(color.RGBA{16, 30, 14, 255})
-
-	// Trees — visible, collidable
-	for _, t := range treePosns {
-		drawTree(screen, t.x, t.y)
-	}
+	// Pre-rendered background (floor + trees)
+	screen.DrawImage(a.bg, nil)
 
 	// Dead wolf fade-out (300ms)
 	for _, w := range g.wolves {
@@ -497,6 +501,7 @@ func main() {
 	}
 
 	a := &app{g: newGame()}
+	a.initBG()
 	if err := ebiten.RunGame(a); err != nil {
 		log.Fatal(err)
 	}

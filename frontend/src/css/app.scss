@@ -1,2 +1,70 @@
 // app global css in SCSS format
 @import './quasar.variables';
+
+// Base fonts
+body {
+  font-family: 'Crimson Pro', Georgia, serif;
+  background-color: #1e0e06;
+}
+
+// Wood-grain body texture
+body {
+  background-image:
+    repeating-linear-gradient(
+      89deg,
+      transparent 0,
+      transparent 4px,
+      rgba(0, 0, 0, 0.04) 4px,
+      rgba(0, 0, 0, 0.04) 8px
+    ),
+    repeating-linear-gradient(
+      180deg,
+      transparent 0,
+      transparent 60px,
+      rgba(255, 140, 0, 0.025) 60px,
+      rgba(255, 140, 0, 0.025) 61px
+    ),
+    linear-gradient(160deg, #2a1508 0%, #1a0c05 100%);
+}
+
+// Candlelight warmth — gentle, not crushing
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 50% 20%, rgba(220, 120, 20, 0.12) 0%, transparent 70%),
+    radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.35) 100%);
+  pointer-events: none;
+  z-index: 9998;
+}
+
+// Scrollbar
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(200, 120, 20, 0.4) #2a1508;
+}
+*::-webkit-scrollbar { width: 6px; }
+*::-webkit-scrollbar-track { background: #2a1508; }
+*::-webkit-scrollbar-thumb {
+  background: rgba(200, 120, 20, 0.45);
+  border-radius: 2px;
+}
+
+// Candle flicker animation
+@keyframes flicker {
+  0%, 100% { text-shadow: 0 0 10px #e8960e, 0 0 28px rgba(230, 140, 10, 0.6); }
+  33%       { text-shadow: 0 0 7px  #d07808, 0 0 18px rgba(200, 110, 10, 0.4); }
+  66%       { text-shadow: 0 0 14px #f0b020, 0 0 35px rgba(250, 170, 20, 0.7); }
+}
+
+// Ember pulse
+@keyframes ember {
+  0%, 100% { opacity: 1;   box-shadow: 0 0 6px #ff6020, 0 0 14px rgba(220, 80, 0, 0.7); }
+  50%       { opacity: 0.6; box-shadow: 0 0 3px #d04010, 0 0  8px rgba(180, 50, 0, 0.4); }
+}
+
+// Utilities
+.flicker          { animation: flicker 4s ease-in-out infinite; }
+.font-cinzel      { font-family: 'Cinzel', serif; }
+.font-cinzel-deco { font-family: 'Cinzel Decorative', serif; }

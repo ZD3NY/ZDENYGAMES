@@ -68,6 +68,11 @@ services:
       context: ./tetris
       dockerfile: Dockerfile
 
+  wolfpack:
+    build:
+      context: ./wolfpack
+      dockerfile: Dockerfile
+
   frontend:
     build:
       context: ./frontend
@@ -79,9 +84,12 @@ services:
       BACKEND_HOST: backend
       TETRIS_URL: http://tetris:8080
       TETRIS_HOST: tetris
+      WOLFPACK_URL: http://wolfpack:8080
+      WOLFPACK_HOST: wolfpack
     depends_on:
       - backend
       - tetris
+      - wolfpack
 
 volumes:
   postgres_data:

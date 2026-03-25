@@ -7,7 +7,7 @@
           ZdenyGames
         </q-toolbar-title>
         <div class="text-caption text-amber-6 q-mr-md gt-xs" style="font-family: 'Crimson Pro', serif; font-style: italic;">
-          {{ user?.email }}
+          {{ isGuest ? 'Guest' : user?.email }}
         </div>
         <q-btn flat dense round icon="logout" aria-label="Sign out" :loading="signingOut" @click="onSignOut" class="text-amber-5" />
       </q-toolbar>
@@ -60,7 +60,7 @@ import { useAuthStore } from 'stores/auth';
 
 const router = useRouter();
 const authStore = useAuthStore();
-const { user } = storeToRefs(authStore);
+const { user, isGuest } = storeToRefs(authStore);
 
 const leftDrawerOpen = ref(false);
 const signingOut = ref(false);

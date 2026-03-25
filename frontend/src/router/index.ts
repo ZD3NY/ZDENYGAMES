@@ -21,7 +21,7 @@ export default route(function () {
   });
 
   router.beforeEach((to) => {
-    const isAuthenticated = !!localStorage.getItem('accessToken');
+    const isAuthenticated = !!localStorage.getItem('accessToken') || localStorage.getItem('isGuest') === 'true';
 
     if (to.meta.requiresAuth && !isAuthenticated) {
       return { path: '/auth/sign-in' };

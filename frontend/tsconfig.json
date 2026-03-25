@@ -17,6 +17,7 @@
     "lib": ["ESNext", "DOM"],
     "baseUrl": ".",
     "paths": {
+      "#q-app/*": ["node_modules/@quasar/app-vite/*"],
       "src/*": ["src/*"],
       "app/*": ["*"],
       "components/*": ["src/components/*"],

@@ -12,8 +12,9 @@ export const useAuthStore = defineStore('auth', () => {
   const accessToken = ref<string | null>(localStorage.getItem('accessToken'));
   const refreshToken = ref<string | null>(localStorage.getItem('refreshToken'));
   const user = ref<User | null>(JSON.parse(localStorage.getItem('user') ?? 'null'));
+  const isGuest = ref(localStorage.getItem('isGuest') === 'true');
 
-  const isAuthenticated = computed(() => !!accessToken.value);
+  const isAuthenticated = computed(() => !!accessToken.value || isGuest.value);
 
   function setSession(newAccessToken: string, newRefreshToken: string, newUser: User) {
     accessToken.value = newAccessToken;
@@ -33,13 +34,20 @@ export const useAuthStore = defineStore('auth', () => {
     api.defaults.headers.common['Authorization'] = `Bearer ${newAccessToken}`;
   }
 
+  function enterAsGuest() {
+    isGuest.value = true;
+    localStorage.setItem('isGuest', 'true');
+  }
+
   function clearSession() {
     accessToken.value = null;
     refreshToken.value = null;
     user.value = null;
+    isGuest.value = false;
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
+    localStorage.removeItem('isGuest');
     delete api.defaults.headers.common['Authorization'];
   }
 
@@ -86,5 +94,5 @@ export const useAuthStore = defineStore('auth', () => {
     api.defaults.headers.common['Authorization'] = `Bearer ${accessToken.value}`;
   }
 
-  return { accessToken, refreshToken, user, isAuthenticated, signIn, signUp, pollSignUpStatus, signOut, setAccessToken, clearSession };
+  return { accessToken, refreshToken, user, isGuest, isAuthenticated, signIn, signUp, pollSignUpStatus, signOut, setAccessToken, clearSession, enterAsGuest };
 });

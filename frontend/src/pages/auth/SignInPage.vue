@@ -67,6 +67,19 @@
         <span class="text-body2 text-grey-6">Don't have an account? </span>
         <q-btn flat dense no-caps label="Sign up" color="primary" size="sm" to="/auth/sign-up" />
       </q-card-section>
+
+      <q-card-section class="q-pt-none text-center">
+        <q-btn
+          flat
+          no-caps
+          label="Continue as Guest"
+          color="grey-6"
+          size="sm"
+          icon="person_outline"
+          class="full-width"
+          @click="onEnterAsGuest"
+        />
+      </q-card-section>
     </q-card>
   </q-page>
 </template>
@@ -91,6 +104,11 @@ const form = reactive({
 
 function isValidEmail(val: string) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val);
+}
+
+async function onEnterAsGuest() {
+  authStore.enterAsGuest();
+  await router.push('/');
 }
 
 async function onSubmit() {
